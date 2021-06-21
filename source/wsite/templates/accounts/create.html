@@ -1,0 +1,44 @@
+{% extends 'layout/layout.html' %}
+
+{% block page %}
+{% include 'layout/header.html' %}
+<div class="container-fluid p-3" style="min-height:400px">
+
+
+    <!-- add user account -->
+    <section>
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h4 style="padding:5px 0px 35px;">Create Account</h4>
+                    <div class="pull-right">
+                    </div>
+                </div>
+                <form class="py-3" method="post" action="{% url 'NewUser' %}" style="border-top:1px solid #ced4da;">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="username">Name</label>
+                        <input type="text" name="_name" class="form-control" id="username" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" name="_email" class="form-control" id="email" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact">Contact</label>
+                        <input type="number" name="_contact" class="form-control" id="contact" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" name="_password" class="form-control" id="password" value="">
+                    </div>
+                    <div style="margin-top:15px;">
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-plus" aria-hidden="true"></i> Create</button>
+                    </div>
+                </form>            
+            </div>
+        </div>
+    </section>
+</div>
+{% include 'layout/footer.html' %}
+{% endblock page %}
