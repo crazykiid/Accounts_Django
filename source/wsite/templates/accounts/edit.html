@@ -17,7 +17,7 @@
                 </div>
                 <div class="row" style="margin:auto;border-top:1px solid #ced4da;">
                     <div class="col-lg-6" style="padding-left:0">
-                        <form class="py-3" method="post" action="{% url 'UpdateUser' data|usfix:'_id' %}">
+                        <form class="py-3" method="post" action="{% url 'update_user' data|usfix:'_id' %}">
                             {% csrf_token %}
                             <div class="form-group">
                                 <label for="username">Name</label>
@@ -37,7 +37,7 @@
                         </form>
                     </div>
                     <div class="col-lg-6" style="padding-left:0">
-                        <form class="py-3" method="post" action="{% url 'UpdateUser' data|usfix:'_id' %}">
+                        <form class="py-3" method="post" action="{% url 'update_user' data|usfix:'_id' %}">
                             {% csrf_token %}
                             <div class="form-group">
                                 <label for="password">New Password</label>

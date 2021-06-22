@@ -14,7 +14,7 @@
                     <div class="pull-right">
                     </div>
                 </div>
-                <form class="py-3" method="post" action="{% url 'NewUser' %}" style="border-top:1px solid #ced4da;">
+                <form class="py-3" method="post" action="{% url 'create_user' %}" style="border-top:1px solid #ced4da;">
                     {% csrf_token %}
                     <div class="form-group">
                         <label for="username">Name</label>

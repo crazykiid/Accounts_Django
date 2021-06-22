@@ -1,7 +1,10 @@
-from django.shortcuts import render, HttpResponse
-from wsite.models import user_accounts
+from django.shortcuts import render, HttpResponse, redirect
+from wsite.models import user_accounts, admin_accounts
 import datetime, calendar, json
 from django.http import JsonResponse
+from django.contrib.auth.models import User, auth
+from django.contrib.auth.hashers import make_password
+
 
 # Create your views here.
 
@@ -107,19 +110,41 @@ def dashboard(request):
 def about(request):
   return render(request, 'about.html')
 
-# ~/login
-def login(request):
-  return render(request, 'login.html')
+
 
 
 ## Admin View Functions
 
+#GET/POST ~/login
+def adminLogin(request):
+  if request.method == 'POST':
+    
+    username = request.POST.get('_username')
+    password = request.POST.get('_password')
+    user = admin_accounts.auth.authenticate(_username=username, _password= password)
+    if user:
+      auth.login(request, user)
+      return redirect('dashboard')
+    else:
+      return redirect('login')
+  else:
+    return render(request, 'login.html')
+    
+#GET/POST ~/logout
+def adminLogout(request):
+  auth.logout(request)
+  return render(request, 'login.html')
+    
 #GET/POST ~/ac-admin/change-password
 def adminPassUpdate(request):
-  if request.method == 'GET':
+  if request.method == 'POST':
+    password = make_password(request.POST.get('_password'))
+    obj = admin_accounts.objects.get(_id=3)
+    obj._password = password
+    obj.save()
+    return redirect('update_admin_pass')
+  else:
     return render(request, 'admin/change_password.html')
-  elif request.method == 'POST':
-    return HttpResponse(request.POST.get('_password'))
 
 
 
@@ -127,39 +152,65 @@ def adminPassUpdate(request):
 
 #GET/POST ~/accounts/new
 def userCreate(request):
-  if request.method == 'GET':
+  if request.method == 'POST':
+    
+    name = request.POST.get('_name')
+    email = request.POST.get('_email')
+    contact = request.POST.get('_contact')
+    password = make_password(request.POST.get('_password'))
+    
+    user = user_accounts(_name=name, _email=email, _contact=contact, _password=password)
+    user.save()
+    return redirect('create_user')
+  else:
     return render(request, 'accounts/create.html')
-  elif request.method == 'POST':
-    return HttpResponse('New user data submitted')
+
 
 #GET/POST ~/accounts/update/<id>
 def userUpdate(request, id):
-  if request.method == 'GET':
+  if request.method == 'POST':
+    if '_name' in request.POST and '_email' in request.POST and '_contact' in request.POST:
+      obj = user_accounts.objects.get(_id=id)
+      obj._name = request.POST.get('_name')
+      obj._email = request.POST.get('_email')
+      obj._contact = request.POST.get('_contact')
+      obj.save()
+      return redirect('update_user', id)
+      
+    elif '_password' in request.POST:
+      obj = user_accounts.objects.get(_id=id)
+      obj._password = request.POST.get('_password')
+      obj.save()
+      return redirect('update_user', id)
+    else:
+      return redirect('update_user', id)
+  else:
     result = user_accounts.objects.get(_id = id)
     return render(request, 'accounts/edit.html', { 'data' : result })
-  elif request.method == 'POST':
-    return HttpResponse('data saved')
+  
 
+
+  
+  
 
 #GET: ~/accounts/all
 def usersAll(request):
-  users_all = user_accounts.objects.all()
-  #return HttpResponse(users_all[0]._name)
+  users_all = user_accounts.objects.all().order_by('-_id')
   return render(request, 'accounts/all.html', { 'users' : users_all })
 
 #GET: ~/accounts/active
 def usersAct(request):
-  users_active = user_accounts.objects.filter(_status=1)
+  users_active = user_accounts.objects.filter(_status=1).order_by('-_id')
   return render(request, 'accounts/active.html', { 'users' : users_active })
 
 #GET: ~/accounts/inactive
 def usersDct(request):
-  users_inactive = user_accounts.objects.filter(_status=0)
+  users_inactive = user_accounts.objects.filter(_status=0).order_by('-_id')
   return render(request, 'accounts/inactive.html', { 'users' : users_inactive })
 
 #GET: ~/accounts/suspended
 def usersSus(request):
-  users_suspended = user_accounts.objects.filter(_status=9)
+  users_suspended = user_accounts.objects.filter(_status=9).order_by('-_id')
   return render(request, 'accounts/suspended.html', { 'users' : users_suspended })
 
 
