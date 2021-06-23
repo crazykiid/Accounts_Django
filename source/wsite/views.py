@@ -217,31 +217,55 @@ def usersSus(request):
 #GET ~/accounts/lock/<id>
 def userLock(request, id):
   if request.method == 'GET':
-    return HttpResponse('edit user data')
-  elif request.method == 'POST':
-    return HttpResponse('data saved')
-    
+    if id > 0:
+      data = user_accounts.objects.get(_id=id)
+      data._status = 0
+      data.save()
+      return redirect(request.META.get('HTTP_REFERER'))
+    else:
+      return redirect(request.META.get('HTTP_REFERER'))
+  else:
+    return redirect(request.META.get('HTTP_REFERER'))
+
 #GET ~/accounts/unlock/<id>
 def userUnlock(request, id):
   if request.method == 'GET':
-    return HttpResponse('edit user data')
-  elif request.method == 'POST':
-    return HttpResponse('data saved')
+    if id > 0:
+      data = user_accounts.objects.get(_id=id)
+      data._status = 1
+      data.save()
+      return redirect(request.META.get('HTTP_REFERER'))
+    else:
+      return redirect(request.META.get('HTTP_REFERER'))
+  else:
+    return redirect(request.META.get('HTTP_REFERER'))
 
 #GET ~/accounts/activate/<id>
 def userActivate(request, id):
   if request.method == 'GET':
-    return HttpResponse('edit user data')
-  elif request.method == 'POST':
-    return HttpResponse('data saved')
+    if id > 0:
+      data = user_accounts.objects.get(_id=id)
+      data._status = 1
+      data.save()
+      return redirect(request.META.get('HTTP_REFERER'))
+    else:
+      return redirect(request.META.get('HTTP_REFERER'))
+  else:
+    return redirect(request.META.get('HTTP_REFERER'))
 
 #GET ~/accounts/suspend/<id>
 def userSuspend(request, id):
   if request.method == 'GET':
-    return HttpResponse('edit user data')
-  elif request.method == 'POST':
-    return HttpResponse('data saved')
-    
+    if id > 0:
+      data = user_accounts.objects.get(_id=id)
+      data._status = 9
+      data.save()
+      return redirect(request.META.get('HTTP_REFERER'))
+    else:
+      return redirect(request.META.get('HTTP_REFERER'))
+  else:
+    return redirect(request.META.get('HTTP_REFERER'))
+
 #POST ~/accounts/search
 def userSearch(request):
   if request.method == 'GET':
