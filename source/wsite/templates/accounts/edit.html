@@ -4,54 +4,63 @@
 {% block page %}
 {% include 'layout/header.html' %}
 <div class="container-fluid p-3" style="min-height:400px">
+  <!-- messages -->
+  {% if messages %}
+    {% for message in messages %}
+      {% if message.tags == 'success' %}
+      <div class="alert alert-success"><i class="fa fa-check" aria-hidden="true"></i> {{ message }}</div>
+      {% elif message.tags == 'error' %}
+      <div class="alert alert-danger"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> {{ message }}</div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
 
-
-    <!-- add user account -->
-    <section>
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <h4 style="padding:5px 0px 35px;">Update Account</h4>
-                    <div class="pull-right">
-                    </div>
-                </div>
-                <div class="row" style="margin:auto;border-top:1px solid #ced4da;">
-                    <div class="col-lg-6" style="padding-left:0">
-                        <form class="py-3" method="post" action="{% url 'update_user' data|usfix:'_id' %}">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <label for="username">Name</label>
-                                <input type="text" name="_name" class="form-control" id="username" value="{{ data|usfix:'_name' }}">
-                            </div>
-                            <div class="form-group">
-                                <label for="email">Email</label>
-                                <input type="email" name="_email" class="form-control" id="email" value="{{ data|usfix:'_email' }}">
-                            </div>
-                            <div class="form-group">
-                                <label for="contact">Contact</label>
-                                <input type="number" name="_contact" class="form-control" id="contact" value="{{ data|usfix:'_contact' }}">
-                            </div>
-                            <div style="margin-top:15px;">
-                                <button type="submit" class="btn btn-primary"><i class="fa fa-refresh" aria-hidden="true"></i> Update</button>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="col-lg-6" style="padding-left:0">
-                        <form class="py-3" method="post" action="{% url 'update_user' data|usfix:'_id' %}">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <label for="password">New Password</label>
-                                <input type="password" name="_password" class="form-control" id="password">
-                            </div>
-                            <div style="margin-top:15px;">
-                                <button type="submit" class="btn btn-outline-danger"><i class="fa fa-refresh" aria-hidden="true"></i> Update Password</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>            
-            </div>
+  <!-- add user account -->
+  <section>
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <h4 style="padding:5px 0px 35px;">Update Account</h4>
+          <div class="pull-right">
+          </div>
         </div>
-    </section>
+        <div class="row" style="margin:auto;border-top:1px solid #ced4da;">
+          <div class="col-lg-6" style="padding-left:0">
+            <form class="py-3" method="post" action="{% url 'update_user' data|usfix:'_id' %}">
+              {% csrf_token %}
+              <div class="form-group">
+                <label for="username">Name</label>
+                <input type="text" name="_name" class="form-control" id="username" value="{{ data|usfix:'_name' }}">
+              </div>
+              <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" name="_email" class="form-control" id="email" value="{{ data|usfix:'_email' }}">
+              </div>
+              <div class="form-group">
+                <label for="contact">Contact</label>
+                <input type="number" name="_contact" class="form-control" id="contact" value="{{ data|usfix:'_contact' }}">
+              </div>
+              <div style="margin-top:15px;">
+                <button type="submit" class="btn btn-primary"><i class="fa fa-refresh" aria-hidden="true"></i> Update</button>
+              </div>
+            </form>
+          </div>
+          <div class="col-lg-6" style="padding-left:0">
+            <form class="py-3" method="post" action="{% url 'update_user' data|usfix:'_id' %}">
+              {% csrf_token %}
+              <div class="form-group">
+                <label for="password">New Password</label>
+                <input type="password" name="_password" class="form-control" id="password">
+              </div>
+              <div style="margin-top:15px;">
+                <button type="submit" class="btn btn-outline-danger"><i class="fa fa-refresh" aria-hidden="true"></i> Update Password</button>
+              </div>
+            </form>
+          </div>
+        </div>            
+      </div>
+    </div>
+  </section>
 </div>
 {% include 'layout/footer.html' %}
 {% endblock page %}

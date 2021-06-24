@@ -2,6 +2,7 @@ from django.shortcuts import render, HttpResponse, redirect
 from wsite.models import user_accounts, admin_accounts
 import datetime, calendar, json
 from django.http import JsonResponse
+from django.contrib import messages
 from django.contrib.auth.models import User, auth
 from django.contrib.auth.hashers import make_password
 
@@ -123,11 +124,13 @@ def adminLogin(request):
     password = request.POST.get('_password')
     user = admin_accounts.auth.authenticate(_username=username, _password= password)
     if user:
-      auth.login(request, user)
+      #auth.login(request, user)
       return redirect('dashboard')
     else:
+      message.error(request, 'login error one.')
       return redirect('login')
   else:
+    message.error(request, 'login error 2')
     return render(request, 'login.html')
     
 #GET/POST ~/logout
@@ -138,10 +141,17 @@ def adminLogout(request):
 #GET/POST ~/ac-admin/change-password
 def adminPassUpdate(request):
   if request.method == 'POST':
-    password = make_password(request.POST.get('_password'))
-    obj = admin_accounts.objects.get(_id=3)
-    obj._password = password
-    obj.save()
+    if '_password' in request.POST and request.POST.get('_password'):
+      password = make_password(request.POST.get('_password'))
+      try:
+        obj = admin_accounts.objects.get(_id=3)
+        obj._password = password
+        obj.save()
+        messages.success(request, 'password updated')
+      except admin_accounts.DoesNotExist:
+        messages.error(request, 'user not found')
+    else:
+      messages.error(request, 'required parameter missing or invalid')
     return redirect('update_admin_pass')
   else:
     return render(request, 'admin/change_password.html')
@@ -161,6 +171,10 @@ def userCreate(request):
     
     user = user_accounts(_name=name, _email=email, _contact=contact, _password=password)
     user.save()
+    if user:
+      messages.success(request, 'account created successfully')
+    else:
+      messages.error(request, 'something went wrong, try again')
     return redirect('create_user')
   else:
     return render(request, 'accounts/create.html')
@@ -170,28 +184,38 @@ def userCreate(request):
 def userUpdate(request, id):
   if request.method == 'POST':
     if '_name' in request.POST and '_email' in request.POST and '_contact' in request.POST:
-      obj = user_accounts.objects.get(_id=id)
-      obj._name = request.POST.get('_name')
-      obj._email = request.POST.get('_email')
-      obj._contact = request.POST.get('_contact')
-      obj.save()
+      try:
+        obj = user_accounts.objects.get(_id=id)
+        obj._name = request.POST.get('_name')
+        obj._email = request.POST.get('_email')
+        obj._contact = request.POST.get('_contact')
+        obj.save()
+        messages.success(request, 'account updated')
+      except user_accounts.DoesNotExist:
+        messages.error(request, 'user not found')
       return redirect('update_user', id)
       
     elif '_password' in request.POST:
-      obj = user_accounts.objects.get(_id=id)
-      obj._password = request.POST.get('_password')
-      obj.save()
+      password = request.POST.get('_password')
+      if password:
+        try:
+          obj = user_accounts.objects.get(_id=id)
+          obj._password = password
+          obj.save()
+          messages.success(request, 'password updated')
+        except user_accounts.DoesNotExist:
+          messages.error(request, 'user not found')
+      else:
+        messages.error(request, 'required parameter missing or invalid')
       return redirect('update_user', id)
     else:
       return redirect('update_user', id)
   else:
-    result = user_accounts.objects.get(_id = id)
-    return render(request, 'accounts/edit.html', { 'data' : result })
-  
-
-
-  
-  
+    try:
+      result = user_accounts.objects.get(_id = id)
+      return render(request, 'accounts/edit.html', { 'data' : result })
+    except user_accounts.DoesNotExist:
+      return redirect('all_users')
 
 #GET: ~/accounts/all
 def usersAll(request):
@@ -221,10 +245,13 @@ def userLock(request, id):
       data = user_accounts.objects.get(_id=id)
       data._status = 0
       data.save()
+      messages.success(request, 'account locked')
       return redirect(request.META.get('HTTP_REFERER'))
     else:
+      messages.error(request, 'invalid user')
       return redirect(request.META.get('HTTP_REFERER'))
   else:
+    messages.error(request, 'invalid request method')
     return redirect(request.META.get('HTTP_REFERER'))
 
 #GET ~/accounts/unlock/<id>
@@ -234,6 +261,7 @@ def userUnlock(request, id):
       data = user_accounts.objects.get(_id=id)
       data._status = 1
       data.save()
+      messages.success(request, 'account unlocked')
       return redirect(request.META.get('HTTP_REFERER'))
     else:
       return redirect(request.META.get('HTTP_REFERER'))
@@ -247,6 +275,7 @@ def userActivate(request, id):
       data = user_accounts.objects.get(_id=id)
       data._status = 1
       data.save()
+      messages.success(request, 'account activated')
       return redirect(request.META.get('HTTP_REFERER'))
     else:
       return redirect(request.META.get('HTTP_REFERER'))
@@ -260,6 +289,7 @@ def userSuspend(request, id):
       data = user_accounts.objects.get(_id=id)
       data._status = 9
       data.save()
+      messages.success(request, 'account suspended')
       return redirect(request.META.get('HTTP_REFERER'))
     else:
       return redirect(request.META.get('HTTP_REFERER'))
