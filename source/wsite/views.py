@@ -1,10 +1,11 @@
 from django.shortcuts import render, HttpResponse, redirect
-from wsite.models import user_accounts, admin_accounts
+from wsite.models import UserInfo
 import datetime, calendar, json
 from django.http import JsonResponse
 from django.contrib import messages
-from django.contrib.auth.models import User, auth
+from django.contrib.auth.models import auth, User
 from django.contrib.auth.hashers import make_password
+from django.db.models import F
 
 
 # Create your views here.
@@ -12,10 +13,10 @@ from django.contrib.auth.hashers import make_password
 # ~/
 def dashboard(request):
   
-  all_u = user_accounts.objects.all().count()
-  act_u = user_accounts.objects.filter(_status = 1).count()
-  ina_u = user_accounts.objects.filter(_status = 0).count()
-  sus_u = user_accounts.objects.filter(_status = 9).count()
+  all_u = UserInfo.objects.filter(user__is_staff = 0).count()
+  act_u = UserInfo.objects.filter(status = 1, user__is_staff = 0).count()
+  ina_u = UserInfo.objects.filter(status = 0, user__is_staff = 0).count()
+  sus_u = UserInfo.objects.filter(status = 9, user__is_staff = 0).count()
   
   today = datetime.datetime.now().strftime('%b %d, %Y - %A')
   c_day = int(datetime.datetime.now().strftime('%d'))
@@ -38,7 +39,7 @@ def dashboard(request):
     labels = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31"]
 
   while day <= days_thismonth:
-    reg_onthatday = user_accounts.objects.filter(_reg_at__day = day, _reg_at__month = c_month).count()
+    reg_onthatday = UserInfo.objects.filter(user__date_joined__day = day, user__date_joined__month = c_month, user__is_staff = 0).count()
     reg_eachday.append(reg_onthatday)
     if day == c_day:
       break;
@@ -60,7 +61,7 @@ def dashboard(request):
   month = 1
   while month <= 12:
     if month <= c_month:
-      reg_onthatmonth = user_accounts.objects.filter(_reg_at__month = month, _reg_at__year = c_year).count()
+      reg_onthatmonth = UserInfo.objects.filter(user__date_joined__month = month, user__date_joined__year = c_year, user__is_staff = 0).count()
       reg_eachmonth.append(reg_onthatmonth)
       reg_barcolor.append('#3ecd42')
     else:
@@ -119,24 +120,27 @@ def about(request):
 #GET/POST ~/login
 def adminLogin(request):
   if request.method == 'POST':
-    
     username = request.POST.get('_username')
     password = request.POST.get('_password')
-    user = admin_accounts.auth.authenticate(_username=username, _password= password)
-    if user:
-      #auth.login(request, user)
-      return redirect('dashboard')
+    if username and password:
+      user = auth.authenticate(username=username, password=password)
+      if user:
+        auth.login(request, user)
+        return redirect('dashboard')
+      else:
+        messages.error(request, 'username or password is incorrect')
+        return redirect('login')
     else:
-      message.error(request, 'login error one.')
+      messages.error(request, 'invalid credentials')
       return redirect('login')
+      
   else:
-    message.error(request, 'login error 2')
     return render(request, 'login.html')
     
 #GET/POST ~/logout
 def adminLogout(request):
   auth.logout(request)
-  return render(request, 'login.html')
+  return redirect('login')
     
 #GET/POST ~/ac-admin/change-password
 def adminPassUpdate(request):
@@ -219,22 +223,23 @@ def userUpdate(request, id):
 
 #GET: ~/accounts/all
 def usersAll(request):
-  users_all = user_accounts.objects.all().order_by('-_id')
+  users_all = UserInfo.objects.filter(user__is_staff=0).order_by('-user__id')
+  #users_all = UserInfo.objects.raw('SELECT * FROM wsite_UserInfo JOIN auth_User ON wsite_UserInfo.user_id = auth_User.id WHERE auth_User.is_staff = 0;')
   return render(request, 'accounts/all.html', { 'users' : users_all })
 
 #GET: ~/accounts/active
 def usersAct(request):
-  users_active = user_accounts.objects.filter(_status=1).order_by('-_id')
+  users_active = UserInfo.objects.filter(status=1, user__is_staff=0).order_by('-user__id')
   return render(request, 'accounts/active.html', { 'users' : users_active })
 
 #GET: ~/accounts/inactive
 def usersDct(request):
-  users_inactive = user_accounts.objects.filter(_status=0).order_by('-_id')
+  users_inactive = UserInfo.objects.filter(status=0, user__is_staff=0).order_by('-user__id')
   return render(request, 'accounts/inactive.html', { 'users' : users_inactive })
 
 #GET: ~/accounts/suspended
 def usersSus(request):
-  users_suspended = user_accounts.objects.filter(_status=9).order_by('-_id')
+  users_suspended = UserInfo.objects.filter(status=9, user__is_staff=0).order_by('-user__id')
   return render(request, 'accounts/suspended.html', { 'users' : users_suspended })
 
 
@@ -242,8 +247,8 @@ def usersSus(request):
 def userLock(request, id):
   if request.method == 'GET':
     if id > 0:
-      data = user_accounts.objects.get(_id=id)
-      data._status = 0
+      data = UserInfo.objects.get(user__id=id)
+      data.status = 0
       data.save()
       messages.success(request, 'account locked')
       return redirect(request.META.get('HTTP_REFERER'))
@@ -258,8 +263,8 @@ def userLock(request, id):
 def userUnlock(request, id):
   if request.method == 'GET':
     if id > 0:
-      data = user_accounts.objects.get(_id=id)
-      data._status = 1
+      data = UserInfo.objects.get(user__id=id)
+      data.status = 1
       data.save()
       messages.success(request, 'account unlocked')
       return redirect(request.META.get('HTTP_REFERER'))
@@ -272,8 +277,8 @@ def userUnlock(request, id):
 def userActivate(request, id):
   if request.method == 'GET':
     if id > 0:
-      data = user_accounts.objects.get(_id=id)
-      data._status = 1
+      data = UserInfo.objects.get(user__id=id)
+      data.status = 1
       data.save()
       messages.success(request, 'account activated')
       return redirect(request.META.get('HTTP_REFERER'))
@@ -286,8 +291,8 @@ def userActivate(request, id):
 def userSuspend(request, id):
   if request.method == 'GET':
     if id > 0:
-      data = user_accounts.objects.get(_id=id)
-      data._status = 9
+      data = UserInfo.objects.get(user__id=id)
+      data.status = 9
       data.save()
       messages.success(request, 'account suspended')
       return redirect(request.META.get('HTTP_REFERER'))
@@ -305,16 +310,16 @@ def userSearch(request):
         status = int(request.GET.get('s'))
         
         if status == 0:
-          results = list(user_accounts.objects.filter(_name__icontains = query, _status = 0).values())
+          results = list(UserInfo.objects.filter(user__username__icontains = query, status = 0).values(_id=F('user__id'), _name=F('user__first_name'), _email=F('user__email'), _contact=F('contact'), _reg_at=F('user__date_joined'), _status=F('status')))
         elif status == 1:
-          results = list(user_accounts.objects.filter(_name__icontains = query, _status = 1).values())
+          results = list(UserInfo.objects.filter(user__username__icontains = query, status = 1).values(_id=F('user__id'), _name=F('user__first_name'), _email=F('user__email'), _contact=F('contact'), _reg_at=F('user__date_joined'), _status=F('status')))
         elif status == 9:
-          results = list(user_accounts.objects.filter(_name__icontains = query, _status = 9).values())
+          results = list(UserInfo.objects.filter(user__username__icontains = query, status = 9).values(_id=F('user__id'), _name=F('user__first_name'), _email=F('user__email'), _contact=F('contact'), _reg_at=F('user__date_joined'), _status=F('status')))
         else:
           results = []
       elif 'q' in request.GET:
         query = request.GET.get('q')
-        results = list(user_accounts.objects.filter(_name__icontains = query).values())
+        results = list(UserInfo.objects.filter(user__username__icontains = query).values(_id=F('user__id'), _name=F('user__first_name'), _email=F('user__email'), _contact=F('contact'), _reg_at=F('user__date_joined'), _status=F('status')))
       else:
         return JsonResponse({'msg': 'required parameter missing or invalid', 'data': []}, status = 400)
 

@@ -1,6 +1,11 @@
 {% extends 'layout/layout.html' %}
 
 {% block page %}
+
+<section class="container">
+  <div style="max-width:330px;margin:100px auto 0px;">
+    <h5 style="margin-bottom:25px;text-align:center;">L O G I N</h5>
+
   <!-- messages -->
   {% if messages %}
     {% for message in messages %}
@@ -11,9 +16,6 @@
       {% endif %}
     {% endfor %}
   {% endif %}
-<section class="container">
-  <div style="max-width:330px;margin:100px auto 0px;">
-    <h5 style="margin-bottom:25px;text-align:center;">L O G I N</h5>
 
     <form method="post" action="">
       {% csrf_token %}

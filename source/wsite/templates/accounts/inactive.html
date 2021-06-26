@@ -42,35 +42,35 @@
 					</thead>
 					<tbody class="u-list">
 						{% if users.count > 0 %}
-						  {% for user in users %}
+						  {% for u in users %}
 					    <tr>
 					    	<td>
-					    	  {% if user|usfix:'_status' == 0 %}
+					    	  {% if u.status == 0 %}
 					    	  <span class="badge badge-danger">Inactive</span
-					    	  {% elif user|usfix:'_status' == 1 %}
+					    	  {% elif u.status == 1 %}
                   <span class="badge badge-success">Active</span>
-                  {% elif user|usfix:'_status' == 9 %}
+                  {% elif u.status == 9 %}
                   <span class="badge badge-dark">Suspended</span>
                   {% else %}
                   <span class="badge badge-secondary">Unknown</span>
                   {% endif %}
 					    	</td>
-					    	<td>{{ user|usfix:'_name' }}</td>
-					    	<td>{{ user|usfix:'_email' }}</td>
-					    	<td>{{ user|usfix:'_contact' }}</td>
-					    	<td>{{ user|usfix:'_reg_at'|date:'M d, Y'}}</td>
+					    	<td>{{ u.user.first_name }}</td>
+					    	<td>{{ u.user.email }}</td>
+					    	<td>{{ u.contact }}</td>
+					    	<td>{{ u.user.date_joined|date:'M d, Y'}}</td>
 					    	<td>
-					    	  <a class="btn btn-outline-secondary btn-sm my-1" href="{% url 'update_user' user|usfix:'_id' %}" role="button" data-toggle="tooltip" data-placement="bottom" title="Edit Account Details"><i class="fa fa-pencil" aria-hidden="true"></i> edit</a>
+					    	  <a class="btn btn-outline-secondary btn-sm my-1" href="{% url 'update_user' u.user.id %}" role="button" data-toggle="tooltip" data-placement="bottom" title="Edit Account Details"><i class="fa fa-pencil" aria-hidden="true"></i> edit</a>
 					    	</td>
 					    	<td>
-					    	  {% if user|usfix:'_status' == 9 %}
-								  <a class="btn btn-outline-success btn-sm my-1" href="{% url 'activate_user' user|usfix:'_id' %}" role="button" data-toggle="tooltip" data-placement="bottom" title="Activate Account"><i class="fa fa-check" aria-hidden="true"></i> activate</a>
-					    		{% elif user|usfix:'_status' == 0 %}
-					    		<a class="btn btn-outline-danger btn-sm my-1" href="{% url 'suspend_user' user|usfix:'_id' %}" role="button" data-toggle="tooltip" data-placement="bottom" title="De-activate Account"><i class="fa fa-times" aria-hidden="true"></i> suspend</a>
-					    		<a class="btn btn-outline-secondary btn-sm my-1" href="{% url 'unlock_user' user|usfix:'_id' %}" role="button" data-toggle="tooltip" data-placement="bottom" title="Unlock Account"><i class="fa fa-unlock-alt" aria-hidden="true"></i> unlock</a>
-					    		{% elif user|usfix:'_status' == 1 %}
-					     		<a class="btn btn-outline-danger btn-sm my-1" href="{% url 'suspend_user' user|usfix:'_id' %}" role="button" data-toggle="tooltip" data-placement="bottom" title="De-activate Account"><i class="fa fa-times" aria-hidden="true"></i> suspend</a>
-					     		<a class="btn btn-outline-secondary btn-sm my-1 px-3" href="{% url 'lock_user' user|usfix:'_id' %}" role="button" data-toggle="tooltip" data-placement="bottom" title="Lock Account"><i class="fa fa-lock" aria-hidden="true"></i> lock</a>
+					    	  {% if u.status == 9 %}
+								  <a class="btn btn-outline-success btn-sm my-1" href="{% url 'activate_user' u.user.id %}" role="button" data-toggle="tooltip" data-placement="bottom" title="Activate Account"><i class="fa fa-check" aria-hidden="true"></i> activate</a>
+					    		{% elif u.status == 0 %}
+					    		<a class="btn btn-outline-danger btn-sm my-1" href="{% url 'suspend_user' u.user.id %}" role="button" data-toggle="tooltip" data-placement="bottom" title="De-activate Account"><i class="fa fa-times" aria-hidden="true"></i> suspend</a>
+					    		<a class="btn btn-outline-secondary btn-sm my-1" href="{% url 'unlock_user' u.user.id %}" role="button" data-toggle="tooltip" data-placement="bottom" title="Unlock Account"><i class="fa fa-unlock-alt" aria-hidden="true"></i> unlock</a>
+					    		{% elif u.status == 1 %}
+					     		<a class="btn btn-outline-danger btn-sm my-1" href="{% url 'suspend_user' u.user.id %}" role="button" data-toggle="tooltip" data-placement="bottom" title="De-activate Account"><i class="fa fa-times" aria-hidden="true"></i> suspend</a>
+					     		<a class="btn btn-outline-secondary btn-sm my-1 px-3" href="{% url 'lock_user' u.user.id %}" role="button" data-toggle="tooltip" data-placement="bottom" title="Lock Account"><i class="fa fa-lock" aria-hidden="true"></i> lock</a>
 					     		{% else %}
 					     		{% endif %}
 					      </td>

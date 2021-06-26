@@ -1,6 +1,10 @@
 from django.contrib import admin
-from wsite.models import admin_accounts, user_accounts
+from wsite.models import UserInfo
+
+
+class UserInfoAdmin(admin.ModelAdmin):
+  list_display = ('user', 'contact', 'status')
+  
 
 # Register your models here.
-admin.site.register(admin_accounts)
-admin.site.register(user_accounts)
+admin.site.register(UserInfo, UserInfoAdmin)
