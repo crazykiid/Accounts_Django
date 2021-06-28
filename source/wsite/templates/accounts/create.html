@@ -3,17 +3,7 @@
 {% block page %}
 {% include 'layout/header.html' %}
 <div class="container-fluid p-3" style="min-height:400px">
-  <!-- messages -->
-  {% if messages %}
-    {% for message in messages %}
-      {% if message.tags == 'success' %}
-      <div class="alert alert-success"><i class="fa fa-check" aria-hidden="true"></i> {{ message }}</div>
-      {% elif message.tags == 'error' %}
-      <div class="alert alert-danger"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> {{ message }}</div>
-      {% endif %}
-    {% endfor %}
-  {% endif %}
-
+  {% include 'layout/message.html' %}
     <!-- add user account -->
     <section>
         <div class="card">

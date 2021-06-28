@@ -1,22 +1,10 @@
 {% extends 'layout/layout.html' %}
 
 {% block page %}
-
 <section class="container">
   <div style="max-width:330px;margin:100px auto 0px;">
     <h5 style="margin-bottom:25px;text-align:center;">L O G I N</h5>
-
-  <!-- messages -->
-  {% if messages %}
-    {% for message in messages %}
-      {% if message.tags == 'success' %}
-      <div class="alert alert-success"><i class="fa fa-check" aria-hidden="true"></i> {{ message }}</div>
-      {% elif message.tags == 'error' %}
-      <div class="alert alert-danger"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> {{ message }}</div>
-      {% endif %}
-    {% endfor %}
-  {% endif %}
-
+    {% include 'layout/message.html' %}
     <form method="post" action="">
       {% csrf_token %}
       <div class="form-group">
