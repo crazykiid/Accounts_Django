@@ -9,7 +9,7 @@
       {% csrf_token %}
       <div class="form-group">
         <label for="username"><i class="fa fa-user" aria-hidden="true"></i> Username</label>
-        <input type="text" name="_username" class="form-control" id="username" value="">
+        <input type="text" name="_username" class="form-control" id="username" value="{{ request.session.guest }}">
       </div>
       <div class="form-group">
         <label for="password"><i class="fa fa-key" aria-hidden="true"></i> Password</label>

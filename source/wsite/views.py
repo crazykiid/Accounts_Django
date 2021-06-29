@@ -1,17 +1,16 @@
 from django.shortcuts import render, HttpResponse, redirect
-from wsite.models import UserInfo
-import datetime, calendar, json
 from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth.models import auth, User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.db.models import F
+from wsite.models import UserInfo
+import datetime, calendar, json
 import uuid
+from wsite.utils import namesplit
 
-# Create your views here.
-
-# ~/
+#GET: ~/
 @login_required(login_url='/login/')
 def dashboard(request):
   page_title = 'Home - Account Manager'
@@ -109,21 +108,21 @@ def dashboard(request):
   }
   return render(request, 'dashboard.html', data)
   #return HttpResponse('this is home')
-  
-  
-# ~/about
+
+
+#GET: ~/about/
 @login_required(login_url='/login/')
 def about(request):
   page_title = 'This Project'
   return render(request, 'about.html', { 'page_title' : page_title })
 
-#GET/POST ~/login
+#GET/POST: ~/login/
 def adminLogin(request):
   page_title = 'Welcome to accounts!'
   if request.method == 'POST':
     username = request.POST.get('_username')
     password = request.POST.get('_password')
-    request.session['username'] = username
+    request.session['guest'] = username
     if username and password:
       user = auth.authenticate(username=username, password=password)
       if user:
@@ -135,17 +134,18 @@ def adminLogin(request):
     else:
       messages.error(request, 'invalid credentials')
       return redirect('login')
-      
   else:
     return render(request, 'login.html', { 'page_title' : page_title })
     
-#GET/POST ~/logout
+#GET: ~/logout/
 @login_required(login_url='/login/')
 def adminLogout(request):
+  guest = request.user.username
   auth.logout(request)
+  request.session['guest'] = guest
   return redirect('login')
     
-#GET/POST ~/ac-admin/change-password
+#GET/POST: ~/ac-admin/change-password/
 @login_required(login_url='/login/')
 def adminPassUpdate(request):
   page_title = 'Change Admin Password'
@@ -166,56 +166,52 @@ def adminPassUpdate(request):
   else:
     return render(request, 'admin/change_password.html', { 'page_title' : page_title })
 
-
-
-## User View Functions
-
-#GET/POST ~/accounts/new
+#GET/POST: ~/accounts/new/
 @login_required(login_url='/login/')
 def userCreate(request):
   page_title = 'Create Account'
   if request.method == 'POST':
-    
     username = uuid.uuid4().hex[:8].upper()
     name = request.POST.get('_name')
     email = request.POST.get('_email')
     contact = request.POST.get('_contact')
     password = make_password(request.POST.get('_password'))
-    
-    #uname_check = User.objects.filter(username=username).exists()
     try:
-      user = User.objects.create_user(username=username, first_name=name, email=email, password=password)
-      info = UserInfo(user=user, contact=contact)
-      info.save()
-      messages.success(request, 'account created successfully')
+      email_check = User.objects.filter(email = email).exists()
+      if email_check:
+        messages.error(request, 'email already in use')
+      else:
+        fml = namesplit(name)
+        user = User.objects.create_user(username = username, first_name = fml[0], last_name = fml[2], email = email, password = password)
+        info = UserInfo(user = user, middle_name = fml[1], contact = contact)
+        info.save()
+        messages.success(request, 'account created successfully')
     except Exception as e:
-        messages.error(request, e) #'something went wrong, try again')
+      messages.error(request, e)#'something went wrong, try again')
     return redirect('create_user')
   else:
     return render(request, 'accounts/create.html', { 'page_title' : page_title })
 
-
-#GET/POST ~/accounts/update/<id>
+#GET/POST: ~/accounts/update/<id>/
 @login_required(login_url='/login/')
 def userUpdate(request, id):
   page_title = 'Update Account'
   if request.method == 'POST':
     if '_name' in request.POST and '_email' in request.POST and '_contact' in request.POST:
       try:
-        #base = User.objects.get(id = id)
-        #base.first_name = request.POST.get('_name')
-        #base.email = request.POST.get('_email')
-        extended = UserInfo.objects.get(user = id)
-        extended.user.first_name = request.POST.get('_name')
-        extended.user.email = request.POST.get('_email')
-        extended.contact = request.POST.get('_contact')
-        extended.user.save()
-        extended.save()
+        fml = namesplit(request.POST.get('_name'))
+        udata = UserInfo.objects.get(user = id)
+        udata.user.first_name = fml[0]
+        udata.user.last_name = fml[2]
+        udata.user.email = request.POST.get('_email')
+        udata.middle_name = fml[1]
+        udata.contact = request.POST.get('_contact')
+        udata.user.save()
+        udata.save()
         messages.success(request, 'account updated')
       except UserInfo.DoesNotExist:
         messages.error(request, 'user not found')
       return redirect('update_user', id)
-      
     elif '_password' in request.POST:
       password = request.POST.get('_password')
       if password:
@@ -239,7 +235,7 @@ def userUpdate(request, id):
     except UserInfo.DoesNotExist:
       return redirect('all_users')
 
-#GET: ~/accounts/all
+#GET: ~/accounts/all/
 @login_required(login_url='/login/')
 def usersAll(request):
   page_title = 'User Accounts'
@@ -247,29 +243,28 @@ def usersAll(request):
   #users_all = UserInfo.objects.raw('SELECT * FROM wsite_UserInfo JOIN auth_User ON wsite_UserInfo.user_id = auth_User.id WHERE auth_User.is_staff = 0;')
   return render(request, 'accounts/all.html', { 'page_title' : page_title, 'users' : users_all })
 
-#GET: ~/accounts/active
+#GET: ~/accounts/active/
 @login_required(login_url='/login/')
 def usersAct(request):
   page_title = 'Active User Accounts'
   users_active = UserInfo.objects.filter(status=1, user__is_staff=0).order_by('-user__id')
   return render(request, 'accounts/active.html', { 'page_title' : page_title, 'users' : users_active })
 
-#GET: ~/accounts/inactive
+#GET: ~/accounts/inactive/
 @login_required(login_url='/login/')
 def usersDct(request):
   page_title = 'Inactive User Accounts'
   users_inactive = UserInfo.objects.filter(status=0, user__is_staff=0).order_by('-user__id')
   return render(request, 'accounts/inactive.html', { 'page_title' : page_title, 'users' : users_inactive })
 
-#GET: ~/accounts/suspended
+#GET: ~/accounts/suspended/
 @login_required(login_url='/login/')
 def usersSus(request):
   page_title = 'suspended User Accounts'
   users_suspended = UserInfo.objects.filter(status=9, user__is_staff=0).order_by('-user__id')
   return render(request, 'accounts/suspended.html', { 'page_title' : page_title, 'users' : users_suspended })
 
-
-#GET ~/accounts/lock/<id>
+#GET: ~/accounts/lock/<id>/
 @login_required(login_url='/login/')
 def userLock(request, id):
   if request.method == 'GET':
@@ -286,7 +281,7 @@ def userLock(request, id):
     messages.error(request, 'invalid request method')
     return redirect(request.META.get('HTTP_REFERER'))
 
-#GET ~/accounts/unlock/<id>
+#GET: ~/accounts/unlock/<id>/
 @login_required(login_url='/login/')
 def userUnlock(request, id):
   if request.method == 'GET':
@@ -301,7 +296,7 @@ def userUnlock(request, id):
   else:
     return redirect(request.META.get('HTTP_REFERER'))
 
-#GET ~/accounts/activate/<id>
+#GET: ~/accounts/activate/<id>/
 @login_required(login_url='/login/')
 def userActivate(request, id):
   if request.method == 'GET':
@@ -316,7 +311,7 @@ def userActivate(request, id):
   else:
     return redirect(request.META.get('HTTP_REFERER'))
 
-#GET ~/accounts/suspend/<id>
+#GET: ~/accounts/suspend/<id>/
 @login_required(login_url='/login/')
 def userSuspend(request, id):
   if request.method == 'GET':
@@ -331,7 +326,7 @@ def userSuspend(request, id):
   else:
     return redirect(request.META.get('HTTP_REFERER'))
 
-#POST ~/accounts/search
+#GET: ~/accounts/search/
 @login_required(login_url='/login/')
 def userSearch(request):
   if request.method == 'GET':
@@ -339,24 +334,21 @@ def userSearch(request):
       if 'q' in request.GET and 's' in request.GET:
         query = request.GET.get('q')
         status = int(request.GET.get('s'))
-        
         if status == 0:
-          results = list(UserInfo.objects.filter(user__first_name__icontains = query, user__is_staff = 0, status = 0).values(_id=F('user__id'), _name=F('user__first_name'), _email=F('user__email'), _contact=F('contact'), _reg_at=F('user__date_joined'), _status=F('status')))
+          results = list(UserInfo.objects.filter(user__first_name__icontains = query, user__is_staff = 0, status = 0).values(_id=F('user__id'), _fn=F('user__first_name'), _mn=F('middle_name'), _ln=F('user__last_name'), _email=F('user__email'), _contact=F('contact'), _reg_at=F('user__date_joined'), _status=F('status')))
         elif status == 1:
-          results = list(UserInfo.objects.filter(user__first_name__icontains = query, user__is_staff = 0, status = 1).values(_id=F('user__id'), _name=F('user__first_name'), _email=F('user__email'), _contact=F('contact'), _reg_at=F('user__date_joined'), _status=F('status')))
+          results = list(UserInfo.objects.filter(user__first_name__icontains = query, user__is_staff = 0, status = 1).values(_id=F('user__id'), _fn=F('user__first_name'), _mn=F('middle_name'), _ln=F('user__last_name'), _email=F('user__email'), _contact=F('contact'), _reg_at=F('user__date_joined'), _status=F('status')))
         elif status == 9:
-          results = list(UserInfo.objects.filter(user__first_name__icontainsname__icontains = query, user__is_staff = 0, status = 9).values(_id=F('user__id'), _name=F('user__first_name'), _email=F('user__email'), _contact=F('contact'), _reg_at=F('user__date_joined'), _status=F('status')))
+          results = list(UserInfo.objects.filter(user__first_name__icontains = query, user__is_staff = 0, status = 9).values(_id=F('user__id'), _fn=F('user__first_name'), _mn=F('middle_name'), _ln=F('user__last_name'), _email=F('user__email'), _contact=F('contact'), _reg_at=F('user__date_joined'), _status=F('status')))
         else:
           results = []
       elif 'q' in request.GET:
         query = request.GET.get('q')
-        results = list(UserInfo.objects.filter(user__first_name__icontains = query, user__is_staff = 0).values(_id=F('user__id'), _name=F('user__first_name'), _email=F('user__email'), _contact=F('contact'), _reg_at=F('user__date_joined'), _status=F('status')))
+        results = list(UserInfo.objects.filter(user__first_name__icontains = query, user__is_staff = 0).values(_id=F('user__id'), _fn=F('user__first_name'), _mn=F('middle_name'), _ln=F('user__last_name'), _email=F('user__email'), _contact=F('contact'), _reg_at=F('user__date_joined'), _status=F('status')))
       else:
         return JsonResponse({'msg': 'required parameter missing or invalid', 'data': []}, status = 400)
-
       return JsonResponse({'msg': 'success', 'data' : results}, status = 200)
     else:
       return JsonResponse({'msg': 'permission denied', 'data' : []}, status = 403)
-  
   else:
     return JsonResponse({'msg': 'method not allowed', 'data': []}, status = 405)

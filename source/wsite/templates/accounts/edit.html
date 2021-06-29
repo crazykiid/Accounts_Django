@@ -20,7 +20,7 @@
               {% csrf_token %}
               <div class="form-group">
                 <label for="username">Name</label>
-                <input type="text" name="_name" class="form-control" id="username" value="{{ data.user.first_name }}">
+                <input type="text" name="_name" class="form-control" id="username" value="{{ data.user.first_name }} {{ data.middle_name }} {{ data.user.last_name }}">
               </div>
               <div class="form-group">
                 <label for="email">Email</label>

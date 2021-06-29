@@ -2,7 +2,6 @@
 {% load custom_tags %}
 
 
-
 {% block page %}
 {% include 'layout/header.html' %}
 <div class="container-fluid p-3" style="min-height:400px">
@@ -45,7 +44,7 @@
                   <span class="badge badge-secondary">Unknown</span>
                   {% endif %}
 					    	</td>
-					    	<td>{{ u.user.first_name }}</td>
+					    	<td>{{ u.user.first_name }} {{ u.middle_name }} {{ u.user.last_name }}</td>
 					    	<td>{{ u.user.email }}</td>
 					    	<td>{{ u.contact }}</td>
 					    	<td>{{ u.user.date_joined|date:'M d, Y' }}</td>
@@ -129,7 +128,7 @@ function resultList(d, q){
 			if(count){
 			  var i = 0;
 				while(i < count){
-					row = row + '<tr><td>'+status(res.data[i]._status)+'</td><td>'+res.data[i]._name+'</td><td>'+res.data[i]._email+'</td><td>'+res.data[i]._contact+'</td><td>'+date(res.data[i]._reg_at)+'</td><td><a class="btn btn-outline-secondary btn-sm my-1" href="/accounts/update/'+res.data[i]._id+'" role="button" data-toggle="tooltip" data-placement="bottom" title="Edit Account Details"><i class="fa fa-pencil" aria-hidden="true"></i> edit</a></td><td>'+actions(res.data[i]._status, res.data[i]._id)+'</td></tr>';
+					row = row + '<tr><td>'+status(res.data[i]._status)+'</td><td>'+res.data[i]._fn+' '+res.data[i]._mn+' '+res.data[i]._ln+'</td><td>'+res.data[i]._email+'</td><td>'+res.data[i]._contact+'</td><td>'+date(res.data[i]._reg_at)+'</td><td><a class="btn btn-outline-secondary btn-sm my-1" href="/accounts/update/'+res.data[i]._id+'" role="button" data-toggle="tooltip" data-placement="bottom" title="Edit Account Details"><i class="fa fa-pencil" aria-hidden="true"></i> edit</a></td><td>'+actions(res.data[i]._status, res.data[i]._id)+'</td></tr>';
 					i++;
 				}
 			}
